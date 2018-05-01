@@ -6,9 +6,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 import matplotlib.cm as cm
-from matplotlib.ticker import NullFormatter, MultipleLocator
+from matplotlib.ticker import MultipleLocator
 from sklearn.cluster import KMeans
 
 sqrt = np.sqrt
@@ -65,10 +64,10 @@ def covar_corr_matrix_calc(data_file,system_descriptor,equilib_index=0,step=1):
                         correlation_matrix[j,i] = correlation_matrix[i,j]
 
         # SAVING RESULTS OUT TO FILE
-        np.savetxt(system_descriptor+'.mean_vector.dat',mean_vector,delimiter='   ')
-        np.savetxt(system_descriptor+'.variance_vector.dat',var_vector,delimiter='   ')
-        np.savetxt(system_descriptor+'.covariance_vector.dat',covariance_matrix,delimiter='   ')
-        np.savetxt(system_descriptor+'.correlation_vector.dat',correlation_matrix,delimiter='   ')
+        np.savetxt(system_descriptor+'.mean_vector.dat',mean_vector,fmt='%f')
+        np.savetxt(system_descriptor+'.variance_vector.dat',var_vector,fmt='%f')
+        np.savetxt(system_descriptor+'.covariance_vector.dat',covariance_matrix,delimiter=' ',fmt='%f')
+        np.savetxt(system_descriptor+'.correlation_vector.dat',correlation_matrix,delimiter=' ',fmt='%f')
 
         # RETURNING RESULTS TO MAIN 
         return data, mean_vector, var_vector, covariance_matrix, correlation_matrix
@@ -79,7 +78,7 @@ def plot_vector_as_2dheatmap(vector,two_dimensional_boolean_matrix,figure_name,c
         vector = np.copy(vector)
         two_dimensional_boolean_matrix = np.copy(two_dimensional_boolean_matrix)
         nNodes = len(two_dimensional_boolean_matrix)
-        two_dimensional_matrix_from_vector = np.zeros((nNodes,nNodes),dtype=np.float32)
+        two_dimensional_matrix_from_vector = np.zeros((nNodes,nNodes),dtype=np.float64)
         counter = 0
         for i in range(nNodes):
                 for j in range(nNodes):
@@ -148,6 +147,8 @@ def plot_2dmatrix(square_matrix,figure_name,cbar_label='',plotting_cmap='bwr',v_
         temp.axes.set_xticks(temp.axes.get_xticks()[:]+0.5)
         temp.axes.set_yticks(temp.axes.get_yticks(minor=True)[:]+0.5,minor=True)
         temp.axes.set_yticks(temp.axes.get_yticks()[:]+0.5)
+        temp.axes.set_xticklabels(xlabels)
+        temp.axes.set_yticklabels(ylabels)
 
         plt.xlim((-0.5,nNodes+0.5))
         plt.ylim((-0.5,nNodes+0.5))
@@ -204,6 +205,7 @@ def data_projection(data,mean_vector,var_vector,eigvec,nProjections,system_descr
                         plt.xlabel('Data projected onto Eigenvector %d'%(i))
                         plt.ylabel('Probability Density')
                         plt.savefig(eigenvec_projection_figure_names %(i),dpi=600,transparent=True)
+                        print 'Projecting data onto eigenvector', i,'. The x-axis range is:', plt.xlim()
                         plt.close()
         
         if test_eigenvec_projections:
@@ -214,7 +216,7 @@ def data_projection(data,mean_vector,var_vector,eigvec,nProjections,system_descr
                                 print 'Eigenvec', i, 'and eigenvec', j,': dot product = ', np.dot(eigvec[:,i],eigvec[:,j]), 'slope, intercept of linear least squares:', np.polyfit(projection_data[:,i],projection_data[:,j],deg=1)
                 print 'Does everything look the way it should?'
         
-        np.savetxt(system_descriptor+'.projected_data.dat',projection_data)
+        np.savetxt(system_descriptor+'.projected_data.dat',projection_data,fmt='%f')
 
         return projection_data
 
@@ -264,7 +266,7 @@ def kmeans_clustering(projection_data,equilib_frame,nClusters_list,system_descri
                         for i in range(nClusters):
                                 for j in range(i+1,nClusters):
                                         cluster_dist_matrix[i,j] = np.sqrt(np.sum(np.square(cluster_centers[i] - cluster_centers[j])))
-                        np.savetxt(cluster_labels_output_string %(nClusters) + '.cluster_centers_dist_matrix.dat',cluster_dist_matrix)
+                        np.savetxt(cluster_labels_output_string %(nClusters) + '.cluster_centers_dist_matrix.dat',cluster_dist_matrix,fmt='%f')
         
                         #-------------------------------------
                         # CALCULATE THE TOTAL INTRA-CLUSTER VARIATION DATA FOR THE CLUSTERING; USED TO CREATE AN ELBOW PLOT TO DETERMINE THE APPROPRIATE NUMBER OF CLUSTERS.
@@ -285,7 +287,7 @@ def kmeans_clustering(projection_data,equilib_frame,nClusters_list,system_descri
                         plt.scatter(projection_data[:,0],projection_data[:,1],marker='.',s=5,lw=0,alpha=0.7,c=colors)
                         plt.plot(cluster_centers[:,0],cluster_centers[:,1],marker='X',mec='k',mfc='r',ms=15,ls='None')
                         for i in range(nClusters):
-                                plt.text(cluster_centers[i,0],cluster_centers[i,1],str(i),color='r',fontsize=15)
+                                plt.text(cluster_centers[i,0],cluster_centers[i,1],str(i),color='k',fontsize=15)
         	        plt.grid(b=True, which='major', axis='both', color='#808080', linestyle='--')
                         plt.xlabel("Mean-centered, Standardized Data Projected onto PC 0" )
                         plt.ylabel("Mean-centered, Standardized Data Projected onto PC 1" )

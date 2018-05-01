@@ -6,6 +6,7 @@
 
 import numpy as np
 
+sqrt = np.sqrt
 sums = np.sum
 square = np.square
 zeros = np.zeros
@@ -24,7 +25,7 @@ def RMSD(x,y,n):
 
 	"""
 	
-	return (sums(square(x-y))/n)**0.5	# the MSD should never be negative, so using **0.5 rather than np.sqrt is safe
+	return sqrt(sums(square(x-y))/n)
 
 def MSD(x,y,n):
 	""" Calculates the Mean Squared Distance between two arrays of the same size
@@ -67,7 +68,7 @@ def euclid_dist(x,y):
 	"""
 	
 	dist2 = sums(square(x-y))
-	dist = dist2**0.5	# the MSD should never be negative, so using **0.5 rather than np.sqrt is safe
+	dist = sqrt(dist2)
 	return dist, dist2
 
 def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ignore_n_nearest_neighbors=0,step=1):
@@ -84,15 +85,14 @@ def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ig
         u = MDAnalysis.Universe(pdb)
         col_var_selections = u.select_atoms(atom_selections)  # MDAnalysis atom selection string formatting required.
         nNodes = col_var_selections.n_atoms     # assumes each col var is a distance between a pair of atoms, i and j. 
-        nNodes_range = range(nNodes)
-	i_max = nNodes-1-ignore_n_nearest_neighbors   # max value of atom looping index i; to be used multiple times so why calculate it multiple times
+        i_max = nNodes-1-ignore_n_nearest_neighbors   # max value of atom looping index i; to be used multiple times so why calculate it multiple times
         boolean_matrix = np.full((nNodes,nNodes),False)  # 2D matrix of False values; elements of this matrix will be set to True as we loop over our i,j atom pairs. This will be used later for the plotting of 1D collective variable vectors onto the respective 2D atom pair matrix.
 
         count = 0
         with open(selection_output_filename,'w') as W:
                 W.write('# Collective variable description: atom name, index, residresname to atom name, index, residresname\n')
-		for i in nNodes_range[:-2-ignore_n_nearest_neighbors]:
-                        for j in nNodes_range[i+1+ignore_n_nearest_neighbors:]:
+                for i in range(i_max):
+                        for j in range(i+1+ignore_n_nearest_neighbors,nNodes):
                             boolean_matrix[i,j] = True
                             W.write('%s %d %s%d   to    %s %d %s%d\n'%(col_var_selections[i].name,col_var_selections[i].index+1,col_var_selections[i].resname,col_var_selections[i].resid,col_var_selections[j].name,col_var_selections[j].index+1,col_var_selections[j].resname,col_var_selections[j].resid)) 
                             count += 1
@@ -110,8 +110,8 @@ def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ig
                         u.load_new(traj_loc%(start))
                         for ts in u.trajectory[::step]:
                                 temp_positions = col_var_selections.positions
-                                for i in nNodes_range[:-2-ignore_n_nearest_neighbors]
-                                        for j in nNodes_range[i+1+ignore_n_nearest_neighbors:]:
+                                for i in range(i_max):
+                                        for j in range(i+1+ignore_n_nearest_neighbors,nNodes):
                                                 dist,dist2 = euclid_dist(temp_positions[i],temp_positions[j])
                                                 W.write('%f '%(dist))
                                 W.write('\n')
@@ -124,10 +124,9 @@ def calc_collective_variable_boolean_matrix(nColVars,ignore_n_nearest_neighbors=
         """
         """
         nNodes = int(np.round(np.max(np.roots([1,-1,1-nColVars*2]))))+ignore_n_nearest_neighbors
-        nNodes_range = range(nNodes)
         boolean_matrix = np.full((nNodes,nNodes),False)  # 2D matrix of False values; elements of this matrix will be set to True as we loop over our i,j atom pairs. This will be used later for the plotting of 1D collective variable vectors onto the respective 2D atom pair matrix.
-	for i in nNodes_range[:-2-ignore_n_nearest_neighbors]:
-                for j in nNodes_range[i+1+ignore_n_nearest_neighbors:]:
+        for i in range(nNodes-1-ignore_n_nearest_neighbors):
+                for j in range(i+1+ignore_n_nearest_neighbors,nNodes):
                         boolean_matrix[i,j] = True
 
         print boolean_matrix

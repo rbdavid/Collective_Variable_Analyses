@@ -59,7 +59,7 @@ def covar_corr_matrix_calc(data_file,system_descriptor,equilib_index=0,step=1):
         correlation_matrix = np.copy(covariance_matrix)
         for i in nColVars_list:
                 for j in nColVars_list[i:]:
-                        correlation_matrix[i,j] /= (var_vector[i]*var_vector[j])**0.5	# not a bug since varaince values should never be negative 
+                        correlation_matrix[i,j] /= (var_vector[i]*var_vector[j])**0.5 
                         covariance_matrix[j,i] = covariance_matrix[i,j]
                         correlation_matrix[j,i] = correlation_matrix[i,j]
 
@@ -78,11 +78,10 @@ def plot_vector_as_2dheatmap(vector,two_dimensional_boolean_matrix,figure_name,c
         vector = np.copy(vector)
         two_dimensional_boolean_matrix = np.copy(two_dimensional_boolean_matrix)
         nNodes = len(two_dimensional_boolean_matrix)
-	nNodes_range = range(nNodes)
         two_dimensional_matrix_from_vector = np.zeros((nNodes,nNodes),dtype=np.float64)
         counter = 0
-        for i in nNodes_range:
-                for j in nNodes_range:
+        for i in range(nNodes):
+                for j in range(nNodes):
                         if two_dimensional_boolean_matrix[i][j]:
                                 two_dimensional_matrix_from_vector[i][j] = vector[counter]
                                 two_dimensional_matrix_from_vector[j][i] = vector[counter]
@@ -173,17 +172,16 @@ def pca_calc(square_matrix,system_descriptor,eigenvector_output_filename):
         
         # ANALYZE THE EIGENVALUES AND CUMULATIVE EIGENVALUE TO HELP THE USER DECIDE THE NUMBER OF EIGENVECTORS THAT ADEQUATELY DESCRIBE THE DATASET
         nVec = len(eigvec)
-	nVec_range = range(nVec)
         cumulative_eigval = np.zeros(nVec,dtype=np.float64)
         total_eigval = 0
-        for i in nVec_range:
+        for i in range(nVec):
                 total_eigval += eigval[i]
                 cumulative_eigval[i] = total_eigval
 
         # OUTPUT EIGENVALUES AND EIGENVECTORS TO FILE
         with open(system_descriptor+'.pca_eigenvalues.dat','w') as f:
                 f.write('# Eigenvalue   Frac_Total   Cumulative   Frac_Cumulative\n')
-                for i in nVec_range:
+                for i in range(nVec):
                         f.write('%f   %f   %f   %f\n' %(eigval[i],eigval[i]/total_eigval,cumulative_eigval[i],cumulative_eigval[i]/total_eigval))
                         np.savetxt(eigenvector_output_filename%(i),eigvec[:,i],fmt='%f')
         
@@ -197,7 +195,7 @@ def data_projection(data,mean_vector,var_vector,eigvec,nProjections,system_descr
 	nProjection_range = range(nProjections)
         data -= mean_vector
         if standardize:
-                data /= var_vector**0.5		# not an issue, since variance should never be zero
+                data /= var_vector**0.5
         projection_data = np.zeros((len(data),nProjections),dtype=np.float64)
         for i in nProjection_range:
                 projection_data[:,i] = np.dot(data,eigvec[:,i])

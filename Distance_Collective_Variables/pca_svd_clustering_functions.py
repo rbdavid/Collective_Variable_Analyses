@@ -12,66 +12,6 @@ from sklearn.cluster import KMeans
 
 # SUBROUTINES/FUNCTIONS:
 
-def covar_corr_matrix_calc(data_file,system_descriptor,equilib_index=0,step=1):
-        """ Calculates the mean and variance vectors as well as the covariance and correlation matrices for a data found in a data file. The data file is assumed to have a specific organization: rows correspond to nInstances of multivariate data; the nColVars columns correspond to the multivariate data over all nInstances. This analysis code calculates the mean, variance, covariance, and correlation arrays for the nColVars data (columns).
-
-        Usage:
-                data, mean_vector, var_vector, covariance_matrix, correlation_matrix = covar_corr_matrix_calc(data_file,system_descriptor, equilib_index = equilib_frame, step=step_nFrames)
-
-        Arguments:
-                data_file: string object that corresponds to the data file containing the dataset to be analyzed. Rows correspond to nInstances. Columns correspond to individual/specific/consistent collective variables.
-                system_descriptor: string object that will be used in naming output files created during this analysis.
-                equilib_index: OPTIONAL; DEFAULT VALUE = 0; int object with a minimum value of 0; rows with indices less than equilib_index will be ignored in the analysis. 
-                step: OPTIONAL; DEFAULT VALUE = 1; POTENTIAL BUGS; int object used to step through the dataset loaded in from the data_file.
-
-### COMMENTS
-        Output:
-                data:
-                mean_vector:
-                var_vector:
-                covariance_matrix:
-                correlation_matrix:
-
-        """
-
-        data = np.loadtxt(data_file)[equilib_index::step]    # assumes data file is formatted with timestep data in each row, a column corresponds to a individual/specific/consistent collective variable.
-        nInstances = len(data)
-        nColVars = len(data[0])
-	nInstances_list = range(nInstances)
-	nColVars_list = range(nColVars)
-        print 'nInstances (aka nSteps) being analyzed: ', nInstances, ' each with ',nColVars, ' nColVars.'
-        
-        mean_vector = np.mean(data,axis=0)
-        var_vector = np.mean(np.square(data),axis=0) - np.square(mean_vector)
-
-        covariance_matrix = np.zeros((nColVars,nColVars),dtype=np.float64)
-        for ts in nInstances_list:
-                for i in nColVars_list:
-			for j in nColVars_list[i:]:
-                                covariance_matrix[i,j] += data[ts,i]*data[ts,j]
-        
-        covariance_matrix /= nInstances
-
-        for i in nColVars_list:
-                for j in nColVars_list[i:]:
-                        covariance_matrix[i,j] -= mean_vector[i]*mean_vector[j]
-                        
-        correlation_matrix = np.copy(covariance_matrix)
-        for i in nColVars_list:
-                for j in nColVars_list[i:]:
-                        correlation_matrix[i,j] /= (var_vector[i]*var_vector[j])**0.5	# not a bug since varaince values should never be negative 
-                        covariance_matrix[j,i] = covariance_matrix[i,j]
-                        correlation_matrix[j,i] = correlation_matrix[i,j]
-
-        # SAVING RESULTS OUT TO FILE
-        np.savetxt(system_descriptor+'.mean_vector.dat',mean_vector,fmt='%f')
-        np.savetxt(system_descriptor+'.variance_vector.dat',var_vector,fmt='%f')
-        np.savetxt(system_descriptor+'.covariance_vector.dat',covariance_matrix,delimiter=' ',fmt='%f')
-        np.savetxt(system_descriptor+'.correlation_vector.dat',correlation_matrix,delimiter=' ',fmt='%f')
-
-        # RETURNING RESULTS TO MAIN 
-        return data, mean_vector, var_vector, covariance_matrix, correlation_matrix
-
 def plot_vector_as_2dheatmap(vector,two_dimensional_boolean_matrix,figure_name,cbar_label='',plotting_cmap='bwr',v_range=None,minor_ticks=1,major_ticks=10):
         """
         """
@@ -160,6 +100,66 @@ def plot_2dmatrix(square_matrix,figure_name,cbar_label='',plotting_cmap='bwr',v_
         plt.savefig(figure_name,dpi=600,transparent=True)
         plt.close()
 
+def covar_corr_matrix_calc(data_file,system_descriptor,equilib_index=0,step=1):
+        """ Calculates the mean and variance vectors as well as the covariance and correlation matrices for a data found in a data file. The data file is assumed to have a specific organization: rows correspond to nInstances of multivariate data; the nColVars columns correspond to the multivariate data over all nInstances. This analysis code calculates the mean, variance, covariance, and correlation arrays for the nColVars data (columns).
+
+        Usage:
+                data, mean_vector, var_vector, covariance_matrix, correlation_matrix = covar_corr_matrix_calc(data_file,system_descriptor, equilib_index = equilib_frame, step=step_nFrames)
+
+        Arguments:
+                data_file: string object that corresponds to the data file containing the dataset to be analyzed. Rows correspond to nInstances. Columns correspond to individual/specific/consistent collective variables.
+                system_descriptor: string object that will be used in naming output files created during this analysis.
+                equilib_index: OPTIONAL; DEFAULT VALUE = 0; int object with a minimum value of 0; rows with indices less than equilib_index will be ignored in the analysis. 
+                step: OPTIONAL; DEFAULT VALUE = 1; POTENTIAL BUGS; int object used to step through the dataset loaded in from the data_file.
+
+	### COMMENTS
+        Output:
+                data:
+                mean_vector:
+                var_vector:
+                covariance_matrix:
+                correlation_matrix:
+
+        """
+
+        data = np.loadtxt(data_file)[equilib_index::step]    # assumes data file is formatted with timestep data in each row, a column corresponds to a individual/specific/consistent collective variable.
+        nInstances = len(data)
+        nColVars = len(data[0])
+	nInstances_list = range(nInstances)
+	nColVars_list = range(nColVars)
+        print 'nInstances (aka nSteps) being analyzed: ', nInstances, ' each with ',nColVars, ' nColVars.'
+        
+        mean_vector = np.mean(data,axis=0)
+        var_vector = np.mean(np.square(data),axis=0) - np.square(mean_vector)
+
+        covariance_matrix = np.zeros((nColVars,nColVars),dtype=np.float64)
+        for ts in nInstances_list:
+                for i in nColVars_list:
+			for j in nColVars_list[i:]:
+                                covariance_matrix[i,j] += data[ts,i]*data[ts,j]
+        
+        covariance_matrix /= nInstances
+
+        for i in nColVars_list:
+                for j in nColVars_list[i:]:
+                        covariance_matrix[i,j] -= mean_vector[i]*mean_vector[j]
+                        
+        correlation_matrix = np.copy(covariance_matrix)
+        for i in nColVars_list:
+                for j in nColVars_list[i:]:
+                        correlation_matrix[i,j] /= (var_vector[i]*var_vector[j])**0.5	# not a bug since varaince values should never be negative 
+                        covariance_matrix[j,i] = covariance_matrix[i,j]
+                        correlation_matrix[j,i] = correlation_matrix[i,j]
+
+        # SAVING RESULTS OUT TO FILE
+        np.savetxt(system_descriptor+'.mean_vector.dat',mean_vector,fmt='%f')
+        np.savetxt(system_descriptor+'.variance_vector.dat',var_vector,fmt='%f')
+        np.savetxt(system_descriptor+'.covariance_vector.dat',covariance_matrix,delimiter=' ',fmt='%f')
+        np.savetxt(system_descriptor+'.correlation_vector.dat',correlation_matrix,delimiter=' ',fmt='%f')
+
+        # RETURNING RESULTS TO MAIN 
+        return data, mean_vector, var_vector, covariance_matrix, correlation_matrix
+
 def pca_calc(square_matrix,system_descriptor,eigenvector_output_filename):
         """
         """
@@ -190,14 +190,12 @@ def pca_calc(square_matrix,system_descriptor,eigenvector_output_filename):
         # RETURN THE EIGENVEC ARRAY
         return eigvec
 
-def data_projection(data,mean_vector,var_vector,eigvec,nProjections,system_descriptor,standardize=False,plotting_bool=True,eigenvec_projection_figure_names='%d.projected_data.1d_hist.png',nBins=100,test_eigenvec_projections=True):
+def data_projection(data,mean_vector,eigvec,nProjections,system_descriptor,standardize=False,plotting_bool=True,eigenvec_projection_figure_names='%d.projected_data.1d_hist.png',nBins=100,test_eigenvec_projections=True):
         """
         """
 
 	nProjection_range = range(nProjections)
         data -= mean_vector
-        if standardize:
-                data /= var_vector**0.5		# not an issue, since variance should never be zero
         projection_data = np.zeros((len(data),nProjections),dtype=np.float64)
         for i in nProjection_range:
                 projection_data[:,i] = np.dot(data,eigvec[:,i])
@@ -222,6 +220,50 @@ def data_projection(data,mean_vector,var_vector,eigvec,nProjections,system_descr
         np.savetxt(system_descriptor+'.projected_data.dat',projection_data,fmt='%f')
 
         return projection_data
+
+def svd_calc(data_file,system_descriptor,eigenvector_output_filename,equilib_index=0,step=1,nProjections=2,plotting_bool=True,eigenvec_projection_figure_names='%d.projected_data.1d_hist.png',nBins=100):
+	"""
+	"""
+
+        data = np.loadtxt(data_file)[equilib_index::step]    # assumes data file is formatted with timestep data in each row, a column corresponds to a individual/specific/consistent collective variable.
+        nInstances = len(data)
+
+	U, s, Vt = np.linalg.svd(data,full_matrices=True)	# svd line; U is the unitary array; s is the singular values vectors (ordered in decending order); Vt is the eigenvector matrix (with eigenvectors as rows; descending order)
+
+	V = Vt.T	# eigenvectors now correspond to columns in this eigenvector matrix
+	S = np.diag(s)	###
+	projection_data = np.dot(U,S)
+	eigenvalues = s**2/(nInstances-1) 	# singular values from svd are related to the eigenvalues of covariance matrix
+
+        # ANALYZE THE EIGENVALUES AND CUMULATIVE EIGENVALUE TO HELP THE USER DECIDE THE NUMBER OF EIGENVECTORS THAT ADEQUATELY DESCRIBE THE DATASET
+        nVec = len(eigenvalues)
+	nVec_range = range(nVec)
+        cumulative_eigval = np.zeros(nVec,dtype=np.float64)
+        total_eigval = 0
+        for i in nVec_range:
+                total_eigval += eigval[i]
+                cumulative_eigval[i] = total_eigval
+
+        # OUTPUT EIGENVALUES AND EIGENVECTORS TO FILE
+        with open(system_descriptor+'.svd_eigenvalues.dat','w') as f:
+                f.write('# Eigenvalue   Frac_Total   Cumulative   Frac_Cumulative\n')
+                for i in nVec_range:
+                        f.write('%f   %f   %f   %f\n' %(eigval[i],eigval[i]/total_eigval,cumulative_eigval[i],cumulative_eigval[i]/total_eigval))
+                        np.savetxt(eigenvector_output_filename%(i),V[:,i],fmt='%f')
+			# plotting 1d histograms of projected data
+			if i < nProjections and plotting_bool:
+                	        events,edges,patches = plt.hist(projection_data[:,i],bins=nBins,histtype='bar',normed=True)
+	        	        plt.grid(b=True, which='major', axis='both', color='#808080', linestyle='--')
+                	        plt.xlabel('Data projected onto Eigenvector %d'%(i))
+                	        plt.ylabel('Probability Density')
+                	        plt.savefig(eigenvec_projection_figure_names %(i),dpi=600,transparent=True)
+                	        print 'Projecting data onto eigenvector', i,'. The x-axis range is:', plt.xlim()
+                	        plt.close()
+        
+	np.savetxt(system_descriptor+'.projected_data.dat',projection_data[:,:nProjections],fmt='%f')
+        
+	# RETURN THE EIGENVEC ARRAY AND PROJECTION DATA MATRIX
+        return V, projection_data
 
 def kmeans_clustering(projection_data,equilib_frame,nClusters_list,system_descriptor,cluster_labels_output_string,cluster_figure_names, step = 1):
         """

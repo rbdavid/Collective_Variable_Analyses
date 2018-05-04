@@ -211,7 +211,7 @@ def data_projection(data,mean_vector,eigvec,nProjections,system_descriptor,stand
         
         if test_eigenvec_projections:
                 print 'The data has been mean centered :. the average of the projected data should be zero. The dot product of the eigenvectors should be zero. The slope of projected data should be close to zero as well.'
-		for i in nProjection_range[:-2]:
+		for i in nProjection_range[:-1]:
                         print 'Eigenvec', i, ' average = ', np.mean(projection_data[:,i])
 			for j in nProjection_range[i+1:]:
                                 print 'Eigenvec', i, 'and eigenvec', j,': dot product = ', np.dot(eigvec[:,i],eigvec[:,j]), 'slope, intercept of linear least squares:', np.polyfit(projection_data[:,i],projection_data[:,j],deg=1)
@@ -228,7 +228,7 @@ def svd_calc(data_file,system_descriptor,eigenvector_output_filename,equilib_ind
         data = np.loadtxt(data_file)[equilib_index::step]    # assumes data file is formatted with timestep data in each row, a column corresponds to a individual/specific/consistent collective variable.
         nInstances = len(data)
 
-	U, s, Vt = np.linalg.svd(data,full_matrices=True)	# svd line; U is the unitary array; s is the singular values vectors (ordered in decending order); Vt is the eigenvector matrix (with eigenvectors as rows; descending order)
+	U, s, Vt = np.linalg.svd(data)  #,full_matrices=True	# svd line; U is the unitary array; s is the singular values vectors (ordered in decending order); Vt is the eigenvector matrix (with eigenvectors as rows; descending order)
 
 	V = Vt.T	# eigenvectors now correspond to columns in this eigenvector matrix
 	S = np.diag(s)	###

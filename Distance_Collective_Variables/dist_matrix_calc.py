@@ -9,10 +9,7 @@ import sys
 import os
 import importlib
 import numpy as np
-import MDAnalysis
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from sklearn.cluster import KMeans
 
 config_file = sys.argv[1]
 
@@ -131,13 +128,14 @@ def main():
         # ----------------------------------------
         if parameters['dist_calc_boolean']:
                 print 'Distance calculations need to performed. Beginning trajectory analysis step.'
-                data_file_to_be_analyzed, collective_variable_boolean_matrix = dist_matrix_calc(parameters['pdb'],parameters['atom_selections'],parameters['traj_loc'],parameters['start'],parameters['end'],system_descriptor,ignore_n_nearest_neighbors=parameters['ignore_n_nearest_neighbors'],step=parameters['step_nFrames'])
+                data_file_to_be_analyzed, collective_variable_boolean_matrix, nColVars = dist_matrix_calc(parameters['pdb'],parameters['atom_selections'],parameters['traj_loc'],parameters['start'],parameters['end'],system_descriptor,ignore_n_nearest_neighbors=parameters['ignore_n_nearest_neighbors'],step=parameters['step_nFrames'])
 
         else:
                 print 'User is reading in a data file containing collective variable data. Trajectory analysis step is being skipped.'
                 data_file_to_be_analyzed = parameters['user_defined_data_file']
+                nColVars = int(parameters['nColVars'])
         	# if the trajectory analysis was not performed, we need to prep the 2D boolean_matrix that will be used in the plotting functions
-        	collective_variable_boolean_matrix = calc_collective_variable_boolean_matrix(parameters['nColVars'],ignore_n_nearest_neighbors = parameters['ignore_n_nearest_neighbors'])
+        	collective_variable_boolean_matrix = calc_collective_variable_boolean_matrix(nColVars,ignore_n_nearest_neighbors = parameters['ignore_n_nearest_neighbors'])
 
 
         equilib_frame = int(parameters['equilib_time']/(parameters['delta_t']*parameters['step_nFrames']))  # units of frames
@@ -147,7 +145,7 @@ def main():
         # Calculate SVD of raw data
         # ----------------------------------------
 	if parameters['svd_boolean']:
-        	eigenvector_output_filename = parameters['output_directory'] + '%0'+'%d'%(int(np.log10(parameters['nColVars']))+1)+'d' + '.' + parameters['system_descriptor'] + '.pca_eigenvector.dat'
+        	eigenvector_output_filename = parameters['output_directory'] + '%0'+'%d'%(int(np.log10(nColVars))+1)+'d' + '.' + parameters['system_descriptor'] + '.pca_eigenvector.dat'
         	projected_data_figure_names = parameters['output_directory'] + '%0'+'%d'%(int(np.log10(parameters['nProjections']))+1)+'d' + '.' + parameters['system_descriptor'] + '.projected_data.1d_hist.' + parameters['figure_format']
 		
 		eigenvector_matrix, projected_data = svd_calc(data_file_to_be_analyzed,system_descriptor,eigenvector_output_filename,equilib_index=equilib_frame,eigenvec_projection_figure_names=projected_data_figure_names,nBins=250)

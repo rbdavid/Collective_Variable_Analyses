@@ -5,6 +5,7 @@
 # PREAMBLE:
 
 import numpy as np
+import MDAnalysis
 
 sums = np.sum
 square = np.square
@@ -91,7 +92,7 @@ def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ig
         count = 0
         with open(selection_output_filename,'w') as W:
                 W.write('# Collective variable description: atom name, index, residresname to atom name, index, residresname\n')
-		for i in nNodes_range[:-2-ignore_n_nearest_neighbors]:
+		for i in nNodes_range[:-1-ignore_n_nearest_neighbors]:
                         for j in nNodes_range[i+1+ignore_n_nearest_neighbors:]:
                             boolean_matrix[i,j] = True
                             W.write('%s %d %s%d   to    %s %d %s%d\n'%(col_var_selections[i].name,col_var_selections[i].index+1,col_var_selections[i].resname,col_var_selections[i].resid,col_var_selections[j].name,col_var_selections[j].index+1,col_var_selections[j].resname,col_var_selections[j].resid)) 
@@ -110,7 +111,7 @@ def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ig
                         u.load_new(traj_loc%(start))
                         for ts in u.trajectory[::step]:
                                 temp_positions = col_var_selections.positions
-                                for i in nNodes_range[:-2-ignore_n_nearest_neighbors]
+                                for i in nNodes_range[:-1-ignore_n_nearest_neighbors]:
                                         for j in nNodes_range[i+1+ignore_n_nearest_neighbors:]:
                                                 dist,dist2 = euclid_dist(temp_positions[i],temp_positions[j])
                                                 W.write('%f '%(dist))
@@ -118,7 +119,7 @@ def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ig
                         start += 1
 
         print 'Finished analyzing trajectory and outputting raw data. Onto calculating the covariance and correlation matrices for the collective variables analyzed.'
-        return data_output_filename, boolean_matrix
+        return data_output_filename, boolean_matrix, count
 
 def calc_collective_variable_boolean_matrix(nColVars,ignore_n_nearest_neighbors=0):
         """
@@ -126,7 +127,7 @@ def calc_collective_variable_boolean_matrix(nColVars,ignore_n_nearest_neighbors=
         nNodes = int(np.round(np.max(np.roots([1,-1,1-nColVars*2]))))+ignore_n_nearest_neighbors
         nNodes_range = range(nNodes)
         boolean_matrix = np.full((nNodes,nNodes),False)  # 2D matrix of False values; elements of this matrix will be set to True as we loop over our i,j atom pairs. This will be used later for the plotting of 1D collective variable vectors onto the respective 2D atom pair matrix.
-	for i in nNodes_range[:-2-ignore_n_nearest_neighbors]:
+	for i in nNodes_range[:-1-ignore_n_nearest_neighbors]:
                 for j in nNodes_range[i+1+ignore_n_nearest_neighbors:]:
                         boolean_matrix[i,j] = True
 

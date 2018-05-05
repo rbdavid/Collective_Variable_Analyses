@@ -1,6 +1,6 @@
 
 # USAGE:
-# from pca_clustering_functions import *
+# from pca_svd_clustering_functions import *
 
 # PREAMBLE:
 
@@ -163,7 +163,6 @@ def covar_corr_matrix_calc(data_file,system_descriptor,equilib_index=0,step=1):
 def pca_calc(square_matrix,system_descriptor,eigenvector_output_filename):
         """
         """
-        square_matrix = np.copy(square_matrix)
         # CALCULATE THE EIGENVALUES AND EIGENVECTORS OF THE SQUARE MATRIX
         eigval,eigvec = np.linalg.eig(square_matrix)    # NOTE: EIGENVEC IS ORGANIZED WHERE COMPONENTS OF ONE, INDIVIDUAL EIGENVECTOR ARE STORED IN THE COLUMN (SECOND INDEX)
         # SORT THE EIGENVALUES AND EIGENVECTORS FROM LARGEST VALUED TO SMALLEST VALUED
@@ -172,7 +171,7 @@ def pca_calc(square_matrix,system_descriptor,eigenvector_output_filename):
         eigvec = eigvec[:,idx]  # rearrange the columns of eigvec
         
         # ANALYZE THE EIGENVALUES AND CUMULATIVE EIGENVALUE TO HELP THE USER DECIDE THE NUMBER OF EIGENVECTORS THAT ADEQUATELY DESCRIBE THE DATASET
-        nVec = len(eigvec)
+        nVec = len(eigval)
 	nVec_range = range(nVec)
         cumulative_eigval = np.zeros(nVec,dtype=np.float64)
         total_eigval = 0
@@ -187,7 +186,7 @@ def pca_calc(square_matrix,system_descriptor,eigenvector_output_filename):
                         f.write('%f   %f   %f   %f\n' %(eigval[i],eigval[i]/total_eigval,cumulative_eigval[i],cumulative_eigval[i]/total_eigval))
                         np.savetxt(eigenvector_output_filename%(i),eigvec[:,i],fmt='%f')
         
-        # RETURN THE EIGENVEC ARRAY
+        # RETURN THE EIGENVEC MATRIX
         return eigvec
 
 def data_projection(data,mean_vector,eigvec,nProjections,system_descriptor,standardize=False,plotting_bool=True,eigenvec_projection_figure_names='%d.projected_data.1d_hist.png',nBins=100,test_eigenvec_projections=True):
@@ -221,49 +220,49 @@ def data_projection(data,mean_vector,eigvec,nProjections,system_descriptor,stand
 
         return projection_data
 
-def svd_calc(data_file,system_descriptor,eigenvector_output_filename,equilib_index=0,step=1,nProjections=2,plotting_bool=True,eigenvec_projection_figure_names='%d.projected_data.1d_hist.png',nBins=100):
-	"""
-	"""
-
-        data = np.loadtxt(data_file)[equilib_index::step]    # assumes data file is formatted with timestep data in each row, a column corresponds to a individual/specific/consistent collective variable.
-        nInstances = len(data)
-
-	U, s, Vt = np.linalg.svd(data)  #,full_matrices=True	# svd line; U is the unitary array; s is the singular values vectors (ordered in decending order); Vt is the eigenvector matrix (with eigenvectors as rows; descending order)
-
-	V = Vt.T	# eigenvectors now correspond to columns in this eigenvector matrix
-	S = np.diag(s)	###
-	projection_data = np.dot(U,S)
-	eigenvalues = s**2/(nInstances-1) 	# singular values from svd are related to the eigenvalues of covariance matrix
-
-        # ANALYZE THE EIGENVALUES AND CUMULATIVE EIGENVALUE TO HELP THE USER DECIDE THE NUMBER OF EIGENVECTORS THAT ADEQUATELY DESCRIBE THE DATASET
-        nVec = len(eigenvalues)
-	nVec_range = range(nVec)
-        cumulative_eigval = np.zeros(nVec,dtype=np.float64)
-        total_eigval = 0
-        for i in nVec_range:
-                total_eigval += eigval[i]
-                cumulative_eigval[i] = total_eigval
-
-        # OUTPUT EIGENVALUES AND EIGENVECTORS TO FILE
-        with open(system_descriptor+'.svd_eigenvalues.dat','w') as f:
-                f.write('# Eigenvalue   Frac_Total   Cumulative   Frac_Cumulative\n')
-                for i in nVec_range:
-                        f.write('%f   %f   %f   %f\n' %(eigval[i],eigval[i]/total_eigval,cumulative_eigval[i],cumulative_eigval[i]/total_eigval))
-                        np.savetxt(eigenvector_output_filename%(i),V[:,i],fmt='%f')
-			# plotting 1d histograms of projected data
-			if i < nProjections and plotting_bool:
-                	        events,edges,patches = plt.hist(projection_data[:,i],bins=nBins,histtype='bar',normed=True)
-	        	        plt.grid(b=True, which='major', axis='both', color='#808080', linestyle='--')
-                	        plt.xlabel('Data projected onto Eigenvector %d'%(i))
-                	        plt.ylabel('Probability Density')
-                	        plt.savefig(eigenvec_projection_figure_names %(i),dpi=600,transparent=True)
-                	        print 'Projecting data onto eigenvector', i,'. The x-axis range is:', plt.xlim()
-                	        plt.close()
-        
-	np.savetxt(system_descriptor+'.projected_data.dat',projection_data[:,:nProjections],fmt='%f')
-        
-	# RETURN THE EIGENVEC ARRAY AND PROJECTION DATA MATRIX
-        return V, projection_data
+#def svd_calc(data_file,system_descriptor,eigenvector_output_filename,equilib_index=0,step=1,nProjections=2,plotting_bool=True,eigenvec_projection_figure_names='%d.projected_data.1d_hist.png',nBins=100):
+#	"""
+#	"""
+#
+#        data = np.loadtxt(data_file)[equilib_index::step]    # assumes data file is formatted with timestep data in each row, a column corresponds to a individual/specific/consistent collective variable.
+#        nInstances = len(data)
+#
+#	U, s, Vt = np.linalg.svd(data)  #,full_matrices=True	# svd line; U is the unitary array; s is the singular values vectors (ordered in decending order); Vt is the eigenvector matrix (with eigenvectors as rows; descending order)
+#
+#	V = Vt.T	# eigenvectors now correspond to columns in this eigenvector matrix
+#	S = np.diag(s)	###
+#	projection_data = np.dot(U,S)
+#	eigenvalues = s**2/(nInstances-1) 	# singular values from svd are related to the eigenvalues of covariance matrix
+#
+#        # ANALYZE THE EIGENVALUES AND CUMULATIVE EIGENVALUE TO HELP THE USER DECIDE THE NUMBER OF EIGENVECTORS THAT ADEQUATELY DESCRIBE THE DATASET
+#        nVec = len(eigenvalues)
+#	nVec_range = range(nVec)
+#        cumulative_eigval = np.zeros(nVec,dtype=np.float64)
+#        total_eigval = 0
+#        for i in nVec_range:
+#                total_eigval += eigval[i]
+#                cumulative_eigval[i] = total_eigval
+#
+#        # OUTPUT EIGENVALUES AND EIGENVECTORS TO FILE
+#        with open(system_descriptor+'.svd_eigenvalues.dat','w') as f:
+#                f.write('# Eigenvalue   Frac_Total   Cumulative   Frac_Cumulative\n')
+#                for i in nVec_range:
+#                        f.write('%f   %f   %f   %f\n' %(eigval[i],eigval[i]/total_eigval,cumulative_eigval[i],cumulative_eigval[i]/total_eigval))
+#                        np.savetxt(eigenvector_output_filename%(i),V[:,i],fmt='%f')
+#			# plotting 1d histograms of projected data
+#			if i < nProjections and plotting_bool:
+#                	        events,edges,patches = plt.hist(projection_data[:,i],bins=nBins,histtype='bar',normed=True)
+#	        	        plt.grid(b=True, which='major', axis='both', color='#808080', linestyle='--')
+#                	        plt.xlabel('Data projected onto Eigenvector %d'%(i))
+#                	        plt.ylabel('Probability Density')
+#                	        plt.savefig(eigenvec_projection_figure_names %(i),dpi=600,transparent=True)
+#                	        print 'Projecting data onto eigenvector', i,'. The x-axis range is:', plt.xlim()
+#                	        plt.close()
+#        
+#	np.savetxt(system_descriptor+'.projected_data.dat',projection_data[:,:nProjections],fmt='%f')
+#        
+#	# RETURN THE EIGENVEC ARRAY AND PROJECTION DATA MATRIX
+#        return V, projection_data
 
 def kmeans_clustering(projection_data,equilib_frame,nClusters_list,system_descriptor,cluster_labels_output_string,cluster_figure_names, step = 1):
         """

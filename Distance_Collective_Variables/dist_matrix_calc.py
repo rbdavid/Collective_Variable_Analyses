@@ -193,8 +193,7 @@ def main():
 
         	# ----------------------------------------
         	# projection analysis
-        	zero_padded_string_formatting = '%0'+'%d'%(int(np.log10(parameters['nProjections']))+1)+'d'
-        	projected_data_figure_names = parameters['output_directory'] + zero_padded_string_formatting +'.' + parameters['system_descriptor'] + '.projected_data.1d_hist.' + parameters['figure_format']
+        	projected_data_figure_names = parameters['output_directory'] + '%0'+'%d'%(int(np.log10(parameters['nProjections']))+1)+'d' + '.' + parameters['system_descriptor'] + '.projected_data.1d_hist.' + parameters['figure_format']
         	
         	projected_data = data_projection(data,mean_vector,eigenvector_matrix,parameters['nProjections'],system_descriptor,plotting_bool = parameters['plotting_boolean'],eigenvec_projection_figure_names=projected_data_figure_names,nBins=250,test_eigenvec_projections=True)
 
@@ -212,7 +211,7 @@ def main():
         # ----------------------------------------
         # clustering analysis and plotting
         cluster_labels_output_string = parameters['output_directory'] + '%0'+'%d'%(int(np.log10(np.max(parameters['nCluster_list']))+1))+'d' + '.' + parameters['system_descriptor']
-        cluster_figure_names = parameters['output_directory'] + zero_padded_string_formatting + '.' + parameters['system_descriptor'] + '.clustering.' + parameters['figure_format']
+        cluster_figure_names = parameters['output_directory'] + '%0'+'%d'%(int(np.log10(np.max(parameters['nCluster_list']))+1))+'d' + '.' + parameters['system_descriptor'] + '.clustering.' + parameters['figure_format']
         
         kmeans_clustering(projected_data,equilib_frame,parameters['nCluster_list'],system_descriptor,cluster_labels_output_string,cluster_figure_names,step = parameters['step_nFrames'])
         print 'Finished clustering the data. Done with the analyses encoded by this script. How does the data look?'

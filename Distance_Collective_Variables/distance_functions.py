@@ -77,6 +77,7 @@ def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ig
 
         # ----------------------------------------
         # CREATE OUTPUT FILE NAMING VARIABLES
+        node_output_filename = system_descriptor + '.nodes.txt'
         selection_output_filename = system_descriptor + '.selections.txt'
         data_output_filename = system_descriptor + '.col_var.dat'
 
@@ -90,7 +91,11 @@ def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ig
         boolean_matrix = np.full((nNodes,nNodes),False)  # 2D matrix of False values; elements of this matrix will be set to True as we loop over our i,j atom pairs. This will be used later for the plotting of 1D collective variable vectors onto the respective 2D atom pair matrix.
 
         count = 0
-        with open(selection_output_filename,'w') as W:
+        with open(selection_output_filename,'w') as W, open(node_output_filename,'w') as Y:
+                Y.write('# Node description: atom name, index, residresname\n')
+                for i in nNodes_range:
+                        Y.write('%s %d %s%d\n'%(col_var_selections[i].name,col_var_selections[i].index+1,col_var_selections[i].resname,col_var_selections[i].resid))
+                
                 W.write('# Collective variable description: atom name, index, residresname to atom name, index, residresname\n')
 		for i in nNodes_range[:-1-ignore_n_nearest_neighbors]:
                         for j in nNodes_range[i+1+ignore_n_nearest_neighbors:]:
@@ -111,7 +116,7 @@ def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ig
                         u.load_new(traj_loc%(start))
                         for ts in u.trajectory[::step]:
                                 temp_positions = col_var_selections.positions
-                                for i in nNodes_range[:-1-ignore_n_nearest_neighbors]:
+                                for i in nNodes_range[:-1-ignore_n_nearest_neighbors]
                                         for j in nNodes_range[i+1+ignore_n_nearest_neighbors:]:
                                                 dist,dist2 = euclid_dist(temp_positions[i],temp_positions[j])
                                                 W.write('%f '%(dist))

@@ -87,7 +87,6 @@ def dist_matrix_calc(pdb,atom_selections,traj_loc,start,end,system_descriptor,ig
         col_var_selections = u.select_atoms(atom_selections)  # MDAnalysis atom selection string formatting required.
         nNodes = col_var_selections.n_atoms     # assumes each col var is a distance between a pair of atoms, i and j. 
         nNodes_range = range(nNodes)
-	i_max = nNodes-1-ignore_n_nearest_neighbors   # max value of atom looping index i; to be used multiple times so why calculate it multiple times
         boolean_matrix = np.full((nNodes,nNodes),False)  # 2D matrix of False values; elements of this matrix will be set to True as we loop over our i,j atom pairs. This will be used later for the plotting of 1D collective variable vectors onto the respective 2D atom pair matrix.
 
         count = 0
